@@ -31,5 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
-main/resources/firebase/
-security/secret-scanning/unblock-secret/
+secrets/
+src/main/resources/firebase/
+*.json
+*service-account*.json
+*credentials*.json
+.env
