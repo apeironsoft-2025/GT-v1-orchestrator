@@ -7,8 +7,8 @@ app:
     raw-data-clean: /api/v1/raw-file-clean
 
 firebase:
-  bucket-name: ${FIREBASE_BUCKET_NAME}
-  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH}
+  bucket-name: gt-v1-f2880.firebasestorage.app
+  service-account-path: file:F:/GT-v1-orchestrator/secrets/firebase-service-account.json
 
 spring:
   application:
