@@ -2,6 +2,7 @@ package com.apeironsoft.GT_v1_orchestrator.raw_data_cleaning.service;
 
 import com.apeironsoft.GT_v1_orchestrator.common.CommonResponse;
 import com.apeironsoft.GT_v1_orchestrator.common.ResponseBuilder;
+import com.apeironsoft.GT_v1_orchestrator.raw_file_handler.model.LocalFileListResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,7 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -20,6 +25,8 @@ public class RawDataCleaningService {
 
     @Value("${app.storage.sharedRoot}")
     private String sharedRoot;
+    @Value("${app.storage.cleaned-csv-dir}")
+    private String cleanedCsvDir;
     private final ResponseBuilder responseBuilder;
 
     public CommonResponse clean(String relativePath) {
@@ -72,10 +79,7 @@ public class RawDataCleaningService {
             Thread.currentThread().interrupt();
             log.error("Error while cleaning raw data for path {}", normalizedRelativePath, e);
             return responseBuilder.buildHandledErrorResponse("Error while cleaning raw data for path=" + normalizedRelativePath);
-        } catch (IOException e) {
-            log.error("Error while cleaning raw data for path {}", normalizedRelativePath, e);
-            return responseBuilder.buildHandledErrorResponse("Error while cleaning raw data for path=" + normalizedRelativePath);
-        } catch (RuntimeException e) {
+        } catch (IOException | RuntimeException e) {
             log.error("Error while cleaning raw data for path {}", normalizedRelativePath, e);
             return responseBuilder.buildHandledErrorResponse("Error while cleaning raw data for path=" + normalizedRelativePath);
         }
@@ -112,4 +116,57 @@ public class RawDataCleaningService {
             return "";
         }
     }
+
+    public CommonResponse getCleanedData() {
+        Path rootPath = Paths.get(cleanedCsvDir).toAbsolutePath().normalize();
+
+        if (!Files.exists(rootPath)) {
+
+            return responseBuilder.buildSoftErrorResponse(
+                    "files not found",
+                    new LocalFileListResponse(
+                            0,
+                            rootPath.toString(),
+                            List.of()
+                    )
+            );
+
+        }
+
+        try (Stream<Path> pathStream = Files.walk(rootPath)) {
+            List<LocalFileListResponse.LocalFileInfo> files = pathStream
+                    .filter(Files::isRegularFile)
+                    .map(path -> toFileInfo(rootPath, path))
+                    .sorted(Comparator.comparing(LocalFileListResponse.LocalFileInfo::lastModifiedAt).reversed())
+                    .toList();
+
+            return responseBuilder.buildSuccessResponse(
+                    "Files found",
+                    new LocalFileListResponse(
+                            files.size(),
+                            rootPath.toString(),
+                            files
+                    )
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private LocalFileListResponse.LocalFileInfo toFileInfo(Path rootPath, Path filePath) {
+        try {
+            Path absolutePath = filePath.toAbsolutePath().normalize();
+
+            return new LocalFileListResponse.LocalFileInfo(
+                    filePath.getFileName().toString(),
+                    rootPath.relativize(absolutePath).toString(),
+                    absolutePath.toString(),
+                    Files.size(filePath),
+                    Files.getLastModifiedTime(filePath).toInstant()
+            );
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to read file info: " + filePath, ex);
+        }
+    }
+
 }
