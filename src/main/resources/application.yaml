@@ -7,8 +7,6 @@ app:
     raw-data-clean: /api/v1/raw-file-clean
 
 firebase:
-#  bucket-name: gt-v1-f2880.firebasestorage.app
-#  service-account-path: classpath:firebase/gt-v1-f2880-firebase-adminsdk-fbsvc-32f118650a.json
   bucket-name: ${FIREBASE_BUCKET_NAME}
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH}
 
@@ -18,11 +16,8 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/gt_v1_orchestrator
     username: root
-#    password: 1234
     password: ${DB_PASSWORD}
   jpa:
-#    hibernate:
-#      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
