@@ -7,10 +7,23 @@ app:
     raw-file: /api/v1/raw-file
     raw-data-clean: /api/v1/raw-file-clean
     cleaned-data-details: /api/v1/cleaned-data-details
+    indicator:
+      macd-run: /api/v1/indicator/macd-run
+      ema-stack-run: /api/v1/ema-stack/run
 
 firebase:
   bucket-name: gt-v1-f2880.firebasestorage.app
   service-account-path: file:F:/GT-v1-orchestrator/secrets/firebase-service-account.json
+gt-v1:
+  python:
+    executable: python
+    engine-root-path: F:/GT-v1-engine
+    cleaned-root-path: F:/GT-v1-shared-storage/cleaned
+    macd-script-relative-path: scripts/run_macd_td_ts_from_cleaned_csv.py
+    output-dir: F:/GT-v1-shared-storage/experiments/macd
+    ema-stack-script-relative-path: scripts/run_ema_stack_td_ts_from_cleaned_csv.py
+    ema-stack-output-dir: F:/GT-v1-shared-storage/experiments/ema_stack
+    timeout-seconds: 300
 
 spring:
   application:
