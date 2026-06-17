@@ -35,13 +35,19 @@ public class PythonExperimentProperties {
 
     /**
      * Example:
-     * F:/GT-v1-shared-storage/experiments/macd
+     * F:/GT-v1-shared-storage/indicators
      */
     private String outputDir;
 
     private String emaStackScriptRelativePath;
 
     private String emaStackOutputDir;
+
+    private String indicatorsRootPath;
+
+    private String experimentsRootPath;
+
+    private String mergeTdTsScriptRelativePath;
 
     private long timeoutSeconds = 300;
 }

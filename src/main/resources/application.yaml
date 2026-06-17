@@ -2,14 +2,26 @@ app:
   storage:
     raw-csv-dir: F:/GT-v1-shared-storage/raw
     cleaned-csv-dir: F:\GT-v1-shared-storage\cleaned
+    shared-root: F:\GT-v1-shared-storage
     sharedRoot: F:\\GT-v1-shared-storage
+    rule-json-dir: F:\GT-v1-shared-storage\rules
+    rule-output-dir: F:\GT-v1-shared-storage\rule-output
   api:
     raw-file: /api/v1/raw-file
     raw-data-clean: /api/v1/raw-file-clean
     cleaned-data-details: /api/v1/cleaned-data-details
     indicator:
-      macd-run: /api/v1/indicator/macd-run
-      ema-stack-run: /api/v1/ema-stack/run
+      details: /api/v1/indicator
+      run: /api/v1/indicator/run
+    experiments:
+      ema-macd: /api/v1/experiments/merge-td-ts/run
+    rule:
+      create: /api/v1/rule-engine
+      get-all: /api/v1/rule-engine
+      get-one: /api/v1/rule-engine/get-one
+      execute: /api/v1/execute
+  python:
+    rule-executor-script: F:\GT-v1-engine\scripts\gt_rule_dynamic_csv_executor.py
 
 firebase:
   bucket-name: gt-v1-f2880.firebasestorage.app
@@ -20,9 +32,12 @@ gt-v1:
     engine-root-path: F:/GT-v1-engine
     cleaned-root-path: F:/GT-v1-shared-storage/cleaned
     macd-script-relative-path: scripts/run_macd_td_ts_from_cleaned_csv.py
-    output-dir: F:/GT-v1-shared-storage/experiments/macd
+    output-dir: F:/GT-v1-shared-storage/indicators
     ema-stack-script-relative-path: scripts/run_ema_stack_td_ts_from_cleaned_csv.py
-    ema-stack-output-dir: F:/GT-v1-shared-storage/experiments/ema_stack
+    ema-stack-output-dir: F:/GT-v1-shared-storage/indicators
+    indicators-root-path: F:/GT-v1-shared-storage/indicators
+    experiments-root-path: F:/GT-v1-shared-storage/experiments
+    merge-td-ts-script-relative-path: scripts/merge_two_indicator_td_ts_csv.py
     timeout-seconds: 300
 
 spring:
@@ -32,6 +47,9 @@ spring:
     url: jdbc:mysql://localhost:3306/gt_v1_orchestrator
     username: root
     password: 1234
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/gt_v1_orchestrator
   jpa:
     show-sql: true
     properties:
