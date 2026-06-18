@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class RawDataCleaningService {
 
-    @Value("${app.storage.sharedRoot}")
+    @Value("${app.storage.shared-root}")
     private String sharedRoot;
     @Value("${app.storage.cleaned-csv-dir}")
     private String cleanedCsvDir;

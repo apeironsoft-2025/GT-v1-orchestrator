@@ -24,7 +24,7 @@ import java.util.Map;
 public class CleanedDataService {
     @Value("${app.storage.cleaned-csv-dir}")
     private String cleanedCsvDir;
-    @Value("${app.storage.sharedRoot}")
+    @Value("${app.storage.shared-root}")
     private String sharedRoot;
     private final CleanedCsvDetailsLogService cleanedCsvDetailsLogService;
 

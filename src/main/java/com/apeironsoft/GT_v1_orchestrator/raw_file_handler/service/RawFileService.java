@@ -29,30 +29,25 @@ public class RawFileService {
 
     private final ResponseBuilder responseBuilder;
 
-    //    private List<String> saveFileIntoLocal(MultipartFile file) {
-    private List<String> saveFileIntoLocal(MultipartFile file, String fileName) {
+    private String saveFileIntoLocal(MultipartFile file, String fileName) {
         log.info("Saving file into local storage");
         try {
-            String jobId = UUID.randomUUID().toString();
-//            Path jobDir = Paths.get(rawCsvDir, jobId);
             Path jobDir = Paths.get(rawCsvDir);
-//            Files.createDirectories(jobDir);
-
             Path targetPath = jobDir.resolve(fileName + ".csv");
 
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
             log.info("Successfully saved file into local storage");
-            return List.of(jobId, targetPath.toString());
+            return targetPath.toString();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
-            return List.of(e.getMessage());
+            return e.getMessage();
         }
     }
 
     public CommonResponse saveToLocalAndCreateLog(MultipartFile file, String fileName) {
 
-        List<String> localData = saveFileIntoLocal(file, fileName);
+        String localData = saveFileIntoLocal(file, fileName);
 
         return responseBuilder.buildSuccessResponse(
                 "File save in local and upload to cloud is success",

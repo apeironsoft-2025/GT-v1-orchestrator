@@ -16,23 +16,11 @@ import java.io.IOException;
 @RestController
 @RequestMapping()
 @RequiredArgsConstructor
-public class IndicatorController {
+public class IndicatorScriptController {
     private final EmaStackService emaStackService;
     private final IndicatorFilesService indicatorFilesService;
-    private final MacdExperimentService service;
+    private final MacdExperimentService macdService;
     private final ResponseBuilder responseBuilder;
-
-    @GetMapping("${app.api.indicator.details}")
-    public ResponseEntity<CommonResponse> getIndicatorFiles() {
-        try {
-            return ResponseEntity.ok(responseBuilder.buildSuccessResponse(
-                    "Success",
-                    indicatorFilesService.getIndicatorFiles()
-            ));
-        } catch (IOException | IllegalStateException e) {
-            return ResponseEntity.ok(responseBuilder.buildHandledErrorResponse(e.getMessage()));
-        }
-    }
 
     @PostMapping("${app.api.indicator.run}")
     public ResponseEntity<CommonResponse> run(
@@ -41,7 +29,7 @@ public class IndicatorController {
     ) {
         CommonResponse commonResponse = null;
         if(type.equalsIgnoreCase("macd")) {
-           MacdRunResponse macdRunResponse = service.run(fileName);
+           MacdRunResponse macdRunResponse = macdService.run(fileName);
             if ("SUCCESS".equals(macdRunResponse.getStatus())) {
               commonResponse = responseBuilder.buildSuccessResponse("Success", macdRunResponse);
             }else{
@@ -58,5 +46,18 @@ public class IndicatorController {
         }
         return ResponseEntity.ok(commonResponse);
     }
+
+    @GetMapping("${app.api.indicator.details}")
+    public ResponseEntity<CommonResponse> getIndicatorFiles() {
+        try {
+            return ResponseEntity.ok(responseBuilder.buildSuccessResponse(
+                    "Success",
+                    indicatorFilesService.getIndicatorFiles()
+            ));
+        } catch (IOException | IllegalStateException e) {
+            return ResponseEntity.ok(responseBuilder.buildHandledErrorResponse(e.getMessage()));
+        }
+    }
+
 
 }

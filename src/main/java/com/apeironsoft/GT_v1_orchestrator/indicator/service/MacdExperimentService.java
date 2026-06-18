@@ -22,7 +22,7 @@ public class MacdExperimentService {
     public MacdRunResponse run(String fileName) {
         Instant startedAt = Instant.now();
 
-        Path engineRoot = Path.of(properties.getEngineRootPath()).toAbsolutePath().normalize();
+        Path engineRoot = Path.of(properties.getEngineRootPath()).toAbsolutePath().normalize();//F:/GT-v1-engine
         Path scriptPath = engineRoot.resolve(properties.getMacdScriptRelativePath()).toAbsolutePath().normalize();
         Path inputCsvPath = Path.of(cleanedCsvDir).resolve(fileName).toAbsolutePath().normalize();
         Path outputDir = Path.of(properties.getOutputDir()).toAbsolutePath().normalize();

@@ -4,7 +4,6 @@ app:
     raw-csv-dir: F:/GT-v1-shared-storage/raw
     cleaned-csv-dir: F:\GT-v1-shared-storage\cleaned
     shared-root: F:\GT-v1-shared-storage
-    sharedRoot: F:\\GT-v1-shared-storage
     rule-json-dir: F:\GT-v1-shared-storage\rules
     rule-output-dir: F:\GT-v1-shared-storage\rule-output
   api:
