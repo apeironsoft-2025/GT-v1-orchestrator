@@ -1,3 +1,4 @@
+#*** -- DO NOT CHANGE THE app SECTION, ONLY FOR NEW ADDING *** -- #
 app:
   storage:
     raw-csv-dir: F:/GT-v1-shared-storage/raw
@@ -16,12 +17,16 @@ app:
     experiments:
       ema-macd: /api/v1/experiments/merge-td-ts/run
     rule:
-      create: /api/v1/rule-engine
-      get-all: /api/v1/rule-engine
-      get-one: /api/v1/rule-engine/get-one
-      execute: /api/v1/execute
+      create: /api/v1/rule
+      get-all: /api/v1/rule
+      get-one: /api/v1/rule/get-one
+      execute: /api/v1/rule/execute
+      summary-generate: /api/v1/rule-summary/generate
+      summary-get-one: /api/v1/rule-summary/get-one
+      summary-get-all: /api/v1/rule-summary
   python:
     rule-executor-script: F:\GT-v1-engine\scripts\gt_rule_dynamic_csv_executor.py
+    rule-summary-script: F:\GT-v1-engine\scripts\gt_rule_trade_csv_summary.py
 
 firebase:
   bucket-name: gt-v1-f2880.firebasestorage.app
