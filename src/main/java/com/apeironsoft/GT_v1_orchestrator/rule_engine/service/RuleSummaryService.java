@@ -60,13 +60,14 @@ public class RuleSummaryService {
 
         validateInputTradesPathForRule(ruleId, resolvedInputTradesPath);
         validateExistingFile(resolvedInputTradesPath, "Input trades file does not exist");
-        validateTradeCsvRuleNames(ruleId, resolvedInputTradesPath);
-        validateExistingFile(summaryScript, "Summary Python script does not exist");
 
         TradingRule tradingRule = tradingRuleRepository.findByRuleId(ruleId)
                 .orElseThrow(() -> new IllegalArgumentException("Rule not found for ruleId: " + ruleId));
 
         String resolvedRuleName = resolveRuleName(tradingRule, ruleId);
+        validateTradeCsvRuleNames(ruleId, resolvedRuleName, resolvedInputTradesPath);
+        validateExistingFile(summaryScript, "Summary Python script does not exist");
+
         Path outputSummaryPath = buildOutputSummaryPath(ruleId);
 
         try {
@@ -192,7 +193,15 @@ public class RuleSummaryService {
         }
     }
 
-    private void validateTradeCsvRuleNames(String ruleId, Path inputTradesPath) {
+    private void validateTradeCsvRuleNames(String ruleId, String resolvedRuleName, Path inputTradesPath) {
+        Set<String> allowedRuleNames = new HashSet<>();
+        if (StringUtils.hasText(ruleId)) {
+            allowedRuleNames.add(ruleId.trim());
+        }
+        if (StringUtils.hasText(resolvedRuleName)) {
+            allowedRuleNames.add(resolvedRuleName.trim());
+        }
+
         try (BufferedReader reader = Files.newBufferedReader(inputTradesPath, StandardCharsets.UTF_8)) {
             String headerLine = reader.readLine();
             if (!StringUtils.hasText(headerLine)) {
@@ -218,15 +227,16 @@ public class RuleSummaryService {
                 }
 
                 String csvRuleName = values.get(ruleNameIndex).trim();
-                if (StringUtils.hasText(csvRuleName) && !Objects.equals(csvRuleName, ruleId)) {
+                if (StringUtils.hasText(csvRuleName) && !allowedRuleNames.contains(csvRuleName)) {
                     mismatchedRuleNames.add(csvRuleName);
                 }
             }
 
             if (!mismatchedRuleNames.isEmpty()) {
                 throw new IllegalArgumentException(
-                        "Input trades CSV rule_name values do not match requested ruleId. ruleId="
+                        "Input trades CSV rule_name values do not match requested rule. ruleId="
                                 + ruleId + ", inputTradesPath=" + inputTradesPath
+                                + ", allowedRuleNames=" + allowedRuleNames
                                 + ", mismatchedRuleNames=" + mismatchedRuleNames
                 );
             }

@@ -56,6 +56,52 @@ class RuleSummaryServiceTest {
     }
 
     @Test
+    void generateSummaryAndSavePassesWhenCsvRuleNameEqualsRuleId() throws Exception {
+        writeTradeCsv("GT_RULE_TEST_A", "GT_RULE_TEST_A", 4.0, 6.0);
+        when(tradingRuleRepository.findByRuleId("GT_RULE_TEST_A"))
+                .thenReturn(Optional.of(tradingRule("GT_RULE_TEST_A", "Rule Test A")));
+        mockSaveSummary();
+
+        RuleSummaryGenerateResponse response = ruleSummaryService.generateSummaryAndSave(
+                request("GT_RULE_TEST_A", null, null)
+        );
+
+        assertThat(response.getRuleId()).isEqualTo("GT_RULE_TEST_A");
+        assertThat(response.getRuleName()).isEqualTo("Rule Test A");
+        assertThat(readSummary("GT_RULE_TEST_A").get("netPips")).isEqualTo(10.0);
+    }
+
+    @Test
+    void generateSummaryAndSavePassesWhenCsvRuleNameEqualsResolvedRuleName() throws Exception {
+        writeTradeCsv("GT_RULE_TEST_A", "Rule Test A", 4.0, 6.0);
+        when(tradingRuleRepository.findByRuleId("GT_RULE_TEST_A"))
+                .thenReturn(Optional.of(tradingRule("GT_RULE_TEST_A", "Rule Test A")));
+        mockSaveSummary();
+
+        RuleSummaryGenerateResponse response = ruleSummaryService.generateSummaryAndSave(
+                request("GT_RULE_TEST_A", null, null)
+        );
+
+        assertThat(response.getRuleId()).isEqualTo("GT_RULE_TEST_A");
+        assertThat(response.getRuleName()).isEqualTo("Rule Test A");
+        assertThat(readSummary("GT_RULE_TEST_A").get("netPips")).isEqualTo(10.0);
+    }
+
+    @Test
+    void generateSummaryAndSaveFailsWhenCsvRuleNameEqualsAnotherRuleName() throws Exception {
+        writeTradeCsv("GT_RULE_TEST_A", "Another Rule Name", 4.0, 6.0);
+        when(tradingRuleRepository.findByRuleId("GT_RULE_TEST_A"))
+                .thenReturn(Optional.of(tradingRule("GT_RULE_TEST_A", "Rule Test A")));
+
+        assertThatThrownBy(() -> ruleSummaryService.generateSummaryAndSave(request("GT_RULE_TEST_A", null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Input trades CSV rule_name values do not match requested rule")
+                .hasMessageContaining("GT_RULE_TEST_A")
+                .hasMessageContaining("Rule Test A")
+                .hasMessageContaining("Another Rule Name");
+    }
+
+    @Test
     void generateSummaryAndSaveUsesRequestedRuleDerivedTradeCsvForEachRule() throws Exception {
         writeTradeCsv("GT_RULE_TEST_A", 4.0, 6.0);
         writeTradeCsv("GT_RULE_TEST_B", 100.0, 50.0);
@@ -63,12 +109,7 @@ class RuleSummaryServiceTest {
                 .thenReturn(Optional.of(tradingRule("GT_RULE_TEST_A", "Rule Test A")));
         when(tradingRuleRepository.findByRuleId("GT_RULE_TEST_B"))
                 .thenReturn(Optional.of(tradingRule("GT_RULE_TEST_B", "Rule Test B")));
-        when(ruleExecutionSummaryRepository.save(any(RuleExecutionSummary.class)))
-                .thenAnswer(invocation -> {
-                    RuleExecutionSummary summary = invocation.getArgument(0);
-                    summary.setId("summary-" + summary.getRuleId());
-                    return summary;
-                });
+        mockSaveSummary();
 
         RuleSummaryGenerateRequest requestA = request("GT_RULE_TEST_A", "GT_RULE_TEST_B_trades.csv", "Stale B Name");
         RuleSummaryGenerateRequest requestB = request("GT_RULE_TEST_B", "GT_RULE_TEST_A_trades.csv", "Stale A Name");
@@ -122,13 +163,26 @@ class RuleSummaryServiceTest {
                 .build();
     }
 
+    private void mockSaveSummary() {
+        when(ruleExecutionSummaryRepository.save(any(RuleExecutionSummary.class)))
+                .thenAnswer(invocation -> {
+                    RuleExecutionSummary summary = invocation.getArgument(0);
+                    summary.setId("summary-" + summary.getRuleId());
+                    return summary;
+                });
+    }
+
     private Path writeTradeCsv(String ruleId, double firstPips, double secondPips) throws Exception {
+        return writeTradeCsv(ruleId, ruleId, firstPips, secondPips);
+    }
+
+    private Path writeTradeCsv(String ruleId, String csvRuleName, double firstPips, double secondPips) throws Exception {
         Path path = ruleOutputDir.resolve(ruleId + "_trades.csv");
         Files.writeString(path, """
                 rule_name,direction,entry_datetime,close_datetime,close_status,collected_pips,cc
                 %s,UP,2026-01-05 01:00:00,2026-01-05 01:05:00,TAKE_PROFIT,%s,1
                 %s,DOWN,2026-01-05 07:00:00,2026-01-05 07:05:00,TAKE_PROFIT,%s,2
-                """.formatted(ruleId, firstPips, ruleId, secondPips));
+                """.formatted(csvRuleName, firstPips, csvRuleName, secondPips));
         return path;
     }
 
