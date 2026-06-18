@@ -12,7 +12,7 @@ app:
     cleaned-data-details: /api/v1/cleaned-data-details
     indicator:
       details: /api/v1/indicator
-      run: /api/v1/indicator/run
+      execution: /api/v1/indicator/execution
     experiments:
       ema-macd: /api/v1/experiments/merge-td-ts/run
     rule:
