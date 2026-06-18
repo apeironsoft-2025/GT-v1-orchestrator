@@ -24,6 +24,10 @@ import java.util.Map;
 @Slf4j
 public class RuleCreationService {
 
+    private static final String DEFAULT_RULE_SET_ID = "DEFAULT_RULE_SET";
+    private static final String DEFAULT_RULE_SET_NAME = "Default Rule Set";
+    private static final String DEFAULT_EXECUTOR_TYPE = "RULE_01_DEFAULT";
+
     private final TradingRuleRepository tradingRuleRepository;
     private final ObjectMapper objectMapper;
 
@@ -41,6 +45,9 @@ public class RuleCreationService {
         TradingRule tradingRule = TradingRule.builder()
                 .ruleId(request.getRuleId().trim())
                 .ruleName(request.getRuleName().trim())
+                .ruleSetId(resolveOptionalRuleValue(request.getRuleSetId(), request.getFullRuleConditions(), "ruleSetId", DEFAULT_RULE_SET_ID))
+                .ruleSetName(resolveOptionalRuleValue(request.getRuleSetName(), request.getFullRuleConditions(), "ruleSetName", DEFAULT_RULE_SET_NAME))
+                .executorType(resolveOptionalRuleValue(request.getExecutorType(), request.getFullRuleConditions(), "executorType", DEFAULT_EXECUTOR_TYPE))
                 .fullRuleConditions(request.getFullRuleConditions())
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
@@ -113,6 +120,24 @@ public class RuleCreationService {
         }
     }
 
+    private String resolveOptionalRuleValue(
+            String topLevelValue,
+            Map<String, Object> fullRuleConditions,
+            String fullRuleConditionsKey,
+            String defaultValue
+    ) {
+        if (StringUtils.hasText(topLevelValue)) {
+            return topLevelValue.trim();
+        }
+
+        Object fullRuleConditionsValue = fullRuleConditions.get(fullRuleConditionsKey);
+        if (fullRuleConditionsValue instanceof String value && StringUtils.hasText(value)) {
+            return value.trim();
+        }
+
+        return defaultValue;
+    }
+
     private Path buildRuleJsonPath(String ruleId) {
         String fileName = sanitizeFileName(ruleId) + ".json";
         Path rulesDirectory = Path.of(ruleJsonDir).toAbsolutePath().normalize();
@@ -128,6 +153,9 @@ public class RuleCreationService {
         Map<String, Object> ruleJsonPayload = new LinkedHashMap<>();
         ruleJsonPayload.put("ruleId", savedRule.getRuleId());
         ruleJsonPayload.put("ruleName", savedRule.getRuleName());
+        ruleJsonPayload.put("ruleSetId", savedRule.getRuleSetId());
+        ruleJsonPayload.put("ruleSetName", savedRule.getRuleSetName());
+        ruleJsonPayload.put("executorType", savedRule.getExecutorType());
         ruleJsonPayload.put("fullRuleConditions", savedRule.getFullRuleConditions());
 
         try {

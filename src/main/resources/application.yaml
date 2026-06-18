@@ -26,6 +26,7 @@ app:
       summary-get-all: /api/v1/rule-summary
   python:
     rule-executor-script: F:\GT-v1-engine\scripts\gt_rule_dynamic_csv_executor.py
+    rule-td-only-executor-script: F:\GT-v1-engine\scripts\gt_rule_td_only_dynamic_csv_executor.py
     rule-summary-script: F:\GT-v1-engine\scripts\gt_rule_trade_csv_summary.py
 
 firebase:

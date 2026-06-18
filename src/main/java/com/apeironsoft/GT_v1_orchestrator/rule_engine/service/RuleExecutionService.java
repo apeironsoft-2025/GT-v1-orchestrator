@@ -1,7 +1,9 @@
 package com.apeironsoft.GT_v1_orchestrator.rule_engine.service;
 
+import com.apeironsoft.GT_v1_orchestrator.rule_engine.entity.TradingRule;
 import com.apeironsoft.GT_v1_orchestrator.rule_engine.model.RuleExecuteRequest;
 import com.apeironsoft.GT_v1_orchestrator.rule_engine.model.RuleExecuteResponse;
+import com.apeironsoft.GT_v1_orchestrator.rule_engine.repository.TradingRuleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +22,11 @@ import java.util.List;
 @Slf4j
 public class RuleExecutionService {
 
+    private static final String RULE_03_TD_ONLY_EXECUTOR_TYPE = "RULE_03_TD_ONLY";
+    private static final String DEFAULT_EXECUTOR_TYPE = "RULE_01_DEFAULT";
+
+    private final TradingRuleRepository tradingRuleRepository;
+
     @Value("${app.storage.rule-json-dir}")
     private String ruleJsonDir;
 
@@ -29,10 +36,16 @@ public class RuleExecutionService {
     @Value("${app.python.rule-executor-script}")
     private String ruleExecutorScript;
 
+    @Value("${app.python.rule-td-only-executor-script}")
+    private String ruleTdOnlyExecutorScript;
+
     public RuleExecuteResponse executeRule(RuleExecuteRequest request) {
         validateRequest(request);
 
         String ruleId = request.getRuleId().trim();
+        TradingRule tradingRule = tradingRuleRepository.findByRuleId(ruleId)
+                .orElseThrow(() -> new IllegalArgumentException("Rule not found for ruleId: " + ruleId));
+        String executorType = resolveExecutorType(tradingRule);
         Path datasetPath = Path.of(request.getDatasetLocation().trim()).toAbsolutePath().normalize();
         Path ruleJsonPath = buildRuleJsonPath(ruleId);
         Path outputTradesPath = buildOutputTradesPath(ruleId);
@@ -46,9 +59,12 @@ public class RuleExecutionService {
             throw new IllegalStateException("Failed to create rule output directory: " + outputTradesPath.getParent(), e);
         }
 
-        List<String> command = buildPythonCommand(request, ruleId, datasetPath, ruleJsonPath, outputTradesPath);
-        log.info("Executing rule. ruleId={}, ruleJsonPath={}, datasetPath={}, outputTradesPath={}",
+        String executorScript = resolveExecutorScript(executorType);
+        List<String> command = buildPythonCommand(request, tradingRule, datasetPath, ruleJsonPath, outputTradesPath, executorScript);
+        log.info("Executing rule. ruleId={}, executorType={}, executorScript={}, ruleJsonPath={}, datasetPath={}, outputTradesPath={}",
                 ruleId,
+                executorType,
+                executorScript,
                 ruleJsonPath,
                 datasetPath,
                 outputTradesPath);
@@ -57,6 +73,8 @@ public class RuleExecutionService {
 
         return RuleExecuteResponse.builder()
                 .ruleId(ruleId)
+                .ruleName(tradingRule.getRuleName())
+                .executorType(executorType)
                 .datasetLocation(datasetPath.toString())
                 .ruleJsonPath(ruleJsonPath.toString())
                 .outputTradesPath(outputTradesPath.toString())
@@ -107,14 +125,15 @@ public class RuleExecutionService {
 
     private List<String> buildPythonCommand(
             RuleExecuteRequest request,
-            String ruleId,
+            TradingRule tradingRule,
             Path datasetPath,
             Path ruleJsonPath,
-            Path outputTradesPath
+            Path outputTradesPath,
+            String executorScript
     ) {
         List<String> command = new ArrayList<>();
         command.add("python");
-        command.add(Path.of(ruleExecutorScript).toAbsolutePath().normalize().toString());
+        command.add(Path.of(executorScript).toAbsolutePath().normalize().toString());
         command.add("--rule-json");
         command.add(ruleJsonPath.toString());
         command.add("--input");
@@ -122,9 +141,9 @@ public class RuleExecutionService {
         command.add("--output-trades");
         command.add(outputTradesPath.toString());
         command.add("--rule-id");
-        command.add(ruleId);
+        command.add(tradingRule.getRuleId());
         command.add("--rule-name");
-        command.add(ruleId);
+        command.add(tradingRule.getRuleName());
 
         if (StringUtils.hasText(request.getPair())) {
             command.add("--pair");
@@ -132,6 +151,20 @@ public class RuleExecutionService {
         }
 
         return command;
+    }
+
+    private String resolveExecutorType(TradingRule tradingRule) {
+        if (StringUtils.hasText(tradingRule.getExecutorType())) {
+            return tradingRule.getExecutorType().trim();
+        }
+        return DEFAULT_EXECUTOR_TYPE;
+    }
+
+    private String resolveExecutorScript(String executorType) {
+        if (RULE_03_TD_ONLY_EXECUTOR_TYPE.equalsIgnoreCase(executorType)) {
+            return ruleTdOnlyExecutorScript;
+        }
+        return ruleExecutorScript;
     }
 
     private int runPythonCommand(List<String> command) {

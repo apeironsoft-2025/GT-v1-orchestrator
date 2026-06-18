@@ -22,7 +22,7 @@ public class RuleExecutionController {
     private final RuleExecutionService ruleExecutionService;
     private final ResponseBuilder responseBuilder;
 
-    @PostMapping("${app.api.rule.execute}")
+    @PostMapping({"${app.api.rule.execute}", "/api/v1/execute"})
     public ResponseEntity<CommonResponse> executeRule(@RequestBody RuleExecuteRequest request) {
         RuleExecuteResponse response = ruleExecutionService.executeRule(request);
         return ResponseEntity.ok(responseBuilder.buildSuccessResponse(

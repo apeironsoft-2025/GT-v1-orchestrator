@@ -7,6 +7,8 @@ import lombok.Data;
 @Builder
 public class RuleExecuteResponse {
     private String ruleId;
+    private String ruleName;
+    private String executorType;
     private String datasetLocation;
     private String ruleJsonPath;
     private String outputTradesPath;

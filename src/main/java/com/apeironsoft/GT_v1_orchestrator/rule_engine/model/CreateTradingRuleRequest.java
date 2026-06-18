@@ -16,6 +16,12 @@ public class CreateTradingRuleRequest {
     @NotBlank
     private String ruleName;
 
+    private String ruleSetId;
+
+    private String ruleSetName;
+
+    private String executorType;
+
     @NotNull
     @NotEmpty
     private Map<String, Object> fullRuleConditions;

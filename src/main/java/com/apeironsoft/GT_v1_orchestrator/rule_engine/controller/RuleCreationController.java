@@ -21,13 +21,13 @@ public class RuleCreationController {
     private final RuleCreationService ruleCreationService;
     private final ResponseBuilder responseBuilder;
 
-    @PostMapping("${app.api.rule.create}")
+    @PostMapping({"${app.api.rule.create}", "/api/v1/rule-engine"})
     public ResponseEntity<CommonResponse> addRule(@RequestBody CreateTradingRuleRequest request) {
         TradingRule res = ruleCreationService.saveRule(request);
         return ResponseEntity.ok(responseBuilder.buildSuccessResponse("Success", res));
     }
 
-    @GetMapping("${app.api.rule.get-all}")
+    @GetMapping({"${app.api.rule.get-all}", "/api/v1/rule-engine"})
     public ResponseEntity<CommonResponse> getAllRules() {
         List<TradingRule> res = ruleCreationService.getAllRules();
         return ResponseEntity.ok(responseBuilder.buildSuccessResponse("found all", res));
@@ -35,6 +35,12 @@ public class RuleCreationController {
 
     @GetMapping("${app.api.rule.get-one}")
     public ResponseEntity<CommonResponse> getOneRule(@RequestParam String ruleId) {
+        TradingRule res = ruleCreationService.getRuleByRuleId(ruleId);
+        return ResponseEntity.ok(responseBuilder.buildSuccessResponse("Success", res));
+    }
+
+    @GetMapping("/api/v1/rule-engine/get-one/{ruleId}")
+    public ResponseEntity<CommonResponse> getOneRuleByPath(@PathVariable String ruleId) {
         TradingRule res = ruleCreationService.getRuleByRuleId(ruleId);
         return ResponseEntity.ok(responseBuilder.buildSuccessResponse("Success", res));
     }

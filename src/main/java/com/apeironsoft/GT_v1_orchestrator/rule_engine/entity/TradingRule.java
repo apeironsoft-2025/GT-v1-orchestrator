@@ -29,6 +29,14 @@ public class TradingRule {
     @Indexed
     private String ruleName;
 
+    @Indexed
+    private String ruleSetId;
+
+    private String ruleSetName;
+
+    @Indexed
+    private String executorType;
+
     /**
      * Store full dynamic rule JSON here.
      * Do not use JsonNode/ObjectNode for Mongo entity.
