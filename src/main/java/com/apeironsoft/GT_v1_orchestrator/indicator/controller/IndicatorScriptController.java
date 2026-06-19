@@ -3,6 +3,7 @@ package com.apeironsoft.GT_v1_orchestrator.indicator.controller;
 import com.apeironsoft.GT_v1_orchestrator.common.CommonResponse;
 import com.apeironsoft.GT_v1_orchestrator.common.ResponseBuilder;
 import com.apeironsoft.GT_v1_orchestrator.indicator.model.EmaStackRunResponse;
+import com.apeironsoft.GT_v1_orchestrator.indicator.model.IndicatorBacktestRequest;
 import com.apeironsoft.GT_v1_orchestrator.indicator.model.IndicatorExecutionRequest;
 import com.apeironsoft.GT_v1_orchestrator.indicator.model.MacdRunResponse;
 import com.apeironsoft.GT_v1_orchestrator.indicator.service.EmaStackService;
@@ -12,6 +13,7 @@ import com.apeironsoft.GT_v1_orchestrator.indicator.service.MacdExperimentServic
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,12 +37,17 @@ public class IndicatorScriptController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/api/v1/indicator-backtest")
+    public ResponseEntity<CommonResponse> backTestOnIndicator(@RequestBody IndicatorBacktestRequest backtestRequest){
+        log.info("IndicatorScriptController.backTestOnIndicator");
+        CommonResponse response = scriptService.runBacktest(backtestRequest);
+        return new  ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping("${app.api.indicator.execution}")
     public ResponseEntity<CommonResponse> run(@RequestBody IndicatorExecutionRequest executionRequest, HttpRequest httpRequest) throws IOException {
         log.info("LOG:: uri={}, body={}",httpRequest.getURI(), executionRequest);
         CommonResponse commonResponse = null;
-
-//
 //        if(type.equalsIgnoreCase("macd")) {
 //           MacdRunResponse macdRunResponse = macdService.run(fileName);
 //            if ("SUCCESS".equals(macdRunResponse.getStatus())) {

@@ -2,6 +2,7 @@ package com.apeironsoft.GT_v1_orchestrator.indicator.service;
 
 import com.apeironsoft.GT_v1_orchestrator.common.CommonResponse;
 import com.apeironsoft.GT_v1_orchestrator.common.ResponseBuilder;
+import com.apeironsoft.GT_v1_orchestrator.indicator.model.IndicatorBacktestRequest;
 import com.apeironsoft.GT_v1_orchestrator.indicator.model.IndicatorExecutionRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,13 +40,13 @@ public class IndicatorScriptService {
             List<String> command = new ArrayList<>();
             executionScriptPath(
                     req.getEngineRoot(),
-                    req.getScriptRelativePath(),
+                    req.getScriptPath(),
                     command
             );
 
             log.info("LOG:: Executing Command: {}", command);
 
-            Path inputCsvPath = Path.of(req.getInputFileRelativePath())
+            Path inputCsvPath = Path.of(req.getInputFilePath())
                     .toAbsolutePath()
                     .normalize();
             addCommandOption(command, "--cleaned-root-path", inputCsvPath.toString());
@@ -55,7 +56,7 @@ public class IndicatorScriptService {
             addCommandOption(command, "--file-name", fileName);
             log.info("LOG:: Executing Command: {}", command);
 
-            Path outputCsvPath = Path.of(req.getOutputFileRelativePath())
+            Path outputCsvPath = Path.of(req.getOutputFilePath())
                     .toAbsolutePath()
                     .normalize();
             addCommandOption(command, "--output-dir", outputCsvPath.toString());
@@ -118,5 +119,56 @@ public class IndicatorScriptService {
         return output.toString().trim();
     }
 
+    public CommonResponse runBacktest(IndicatorBacktestRequest req) {
+        /*
+           python F:\GT-v1-engine\scripts\run_indicator_backtest_rule_01.py --file-name USDJPY_M5_ema_stack_td_ts.csv --indicator-root-path F:
+            \GT-v1-shared-storage\indicators --output-dir F:\GT-v1-shared-storage\indicators-backtests
+        * */
+        try {
+            List<String> command = new ArrayList<>();
+
+            executionScriptPath(
+                    req.getEngineRoot(),
+                    req.getScriptPath(),
+                    command
+            );
+
+            log.info("LOG:: Executing Command: {}", command);
+
+            String fileName = req.getFileName();
+            addCommandOption(command, "--file-name", fileName);
+            log.info("LOG:: Executing Command: {}", command);
+
+            Path inputCsvPath = Path.of(req.getInputFilePath())
+                    .toAbsolutePath()
+                    .normalize();
+            addCommandOption(command, "--indicator-root-path", inputCsvPath.toString());
+            log.info("LOG:: Executing Command: {}", command);
+
+            Path outputCsvPath = Path.of(req.getOutputFilePath())
+                    .toAbsolutePath()
+                    .normalize();
+            addCommandOption(command, "--output-dir", outputCsvPath.toString());
+            log.info("LOG:: Executing Command: {}", command);
+
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+
+            Process process = processBuilder.start();
+
+            boolean finished = process.waitFor(300, TimeUnit.SECONDS);
+
+            if (!finished) {
+                throw new RuntimeException();
+            }
+
+            String stdout = readStream(process.getInputStream());
+            String stderr = readStream(process.getErrorStream());
+            int exitCode = process.exitValue();
+
+            return responseBuilder.buildSuccessResponse("final command", stdout+"__"+stderr+"__"+exitCode);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
 

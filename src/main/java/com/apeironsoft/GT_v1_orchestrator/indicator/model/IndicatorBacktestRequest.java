@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class IndicatorExecutionRequest {
+public class IndicatorBacktestRequest {
     private String indicatorName;
     private String engineRoot;
     private String scriptPath;
